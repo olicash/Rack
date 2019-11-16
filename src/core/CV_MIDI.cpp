@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "libMTSClient.h"
 
 
 namespace rack {
@@ -45,11 +46,19 @@ struct CV_MIDI : Module {
 
 	MidiOutput midiOutput;
 	float rateLimiterPhase = 0.f;
+	
+	MTSClient *mtsClient;
 
 	CV_MIDI() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		mtsClient = MTS_RegisterClient();
 		onReset();
 	}
+	
+	virtual ~CV_MIDI() {
+		MTS_DeregisterClient(mtsClient);
+	}
+
 
 	void onReset() override {
 		midiOutput.reset();
@@ -70,7 +79,17 @@ struct CV_MIDI : Module {
 			vel = clamp(vel, 0, 127);
 			midiOutput.setVelocity(vel, c);
 
-			int note = (int) std::round(inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f);
+			double semis = inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f;
+			int note = (int) std::round(semis);
+			if (mtsClient)
+			{
+				double diff=-1.;
+				for (int i=0; i<128; i++)
+				{
+					double d = fabs(i+MTS_RetuningInSemitones(mtsClient,i)-semis);
+					if (diff==-1 || d<diff) {diff = d; note = i;}
+				}
+			}
 			note = clamp(note, 0, 127);
 			bool gate = inputs[GATE_INPUT].getPolyVoltage(c) >= 1.f;
 			midiOutput.setNoteGate(note, gate, c);
