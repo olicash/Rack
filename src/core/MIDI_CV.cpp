@@ -1,4 +1,6 @@
 #include "plugin.hpp"
+#include "libMTSClient.h"
+
 #include <algorithm>
 
 
@@ -70,6 +72,8 @@ struct MIDI_CV : Module {
 	dsp::PulseGenerator stopPulse;
 	dsp::PulseGenerator continuePulse;
 
+	MTSClient *mtsClient;
+
 	MIDI_CV() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		heldNotes.reserve(128);
@@ -77,7 +81,12 @@ struct MIDI_CV : Module {
 			pitchFilters[c].setTau(1 / 30.f);
 			modFilters[c].setTau(1 / 30.f);
 		}
+		mtsClient = MTS_RegisterClient();
 		onReset();
+	}
+	
+	virtual ~MIDI_CV() {
+		MTS_DeregisterClient(mtsClient);
 	}
 
 	void onReset() override {
@@ -118,7 +127,9 @@ struct MIDI_CV : Module {
 		outputs[AFTERTOUCH_OUTPUT].setChannels(channels);
 		outputs[RETRIGGER_OUTPUT].setChannels(channels);
 		for (int c = 0; c < channels; c++) {
-			outputs[CV_OUTPUT].setVoltage((notes[c] - 60.f) / 12.f, c);
+			float note = notes[c];
+			if (mtsClient) note += MTS_RetuningInSemitones(mtsClient, notes[c]);
+			outputs[CV_OUTPUT].setVoltage((note - 60.f) / 12.f, c);
 			outputs[GATE_OUTPUT].setVoltage(gates[c] ? 10.f : 0.f, c);
 			outputs[VELOCITY_OUTPUT].setVoltage(rescale(velocities[c], 0, 127, 0.f, 10.f), c);
 			outputs[AFTERTOUCH_OUTPUT].setVoltage(rescale(aftertouches[c], 0, 127, 0.f, 10.f), c);
