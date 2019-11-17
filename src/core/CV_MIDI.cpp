@@ -79,8 +79,9 @@ struct CV_MIDI : Module {
 			vel = clamp(vel, 0, 127);
 			midiOutput.setVelocity(vel, c);
 
-            double freq = 440. * pow(2., inputs[PITCH_INPUT].getVoltage(c)-0.75);
-			int note = (int) std::round(semis);
+            
+            double freq = 440. * pow(2., inputs[PITCH_INPUT].getVoltage(c) - 0.75);
+			int note = (int) std::round(inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f);
 			if (mtsClient && MTS_HasMaster(mtsClient))
 			{
 				double delta = fabs(MTS_NoteToFrequency(mtsClient,0)-freq);
