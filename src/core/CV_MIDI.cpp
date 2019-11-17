@@ -79,15 +79,15 @@ struct CV_MIDI : Module {
 			vel = clamp(vel, 0, 127);
 			midiOutput.setVelocity(vel, c);
 
-			double semis = inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f;
+            double freq = 440. * pow(2., inputs[PITCH_INPUT].getVoltage(c)-0.75);
 			int note = (int) std::round(semis);
-			if (mtsClient)
+			if (mtsClient && MTS_HasMaster(mtsClient))
 			{
-				double diff=-1.;
-				for (int i=0; i<128; i++)
+				double delta = fabs(MTS_NoteToFrequency(mtsClient,0)-freq);
+				for (int i=1; i<128; i++)
 				{
-					double d = fabs(i+MTS_RetuningInSemitones(mtsClient,i)-semis);
-					if (diff==-1 || d<diff) {diff = d; note = i;}
+					double d = fabs(MTS_NoteToFrequency(mtsClient,i)-freq);
+					if (d<delta) {delta = d; note = i;}
 				}
 			}
 			note = clamp(note, 0, 127);
