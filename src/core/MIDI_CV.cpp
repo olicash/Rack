@@ -168,7 +168,7 @@ struct MIDI_CV : Module {
 			} break;
 			// note on
 			case 0x9: {
-				if (msg.getValue() > 0) {
+				if (!MTS_ShouldFilterNote(mtsClient, msg.getNote()) && msg.getValue() > 0) {
 					int c = msg.getChannel();
 					pressNote(msg.getNote(), &c);
 					velocities[c] = msg.getValue();
