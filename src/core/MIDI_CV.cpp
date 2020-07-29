@@ -128,7 +128,7 @@ struct MIDI_CV : Module {
 		outputs[RETRIGGER_OUTPUT].setChannels(channels);
 		for (int c = 0; c < channels; c++) {
 			float note = notes[c];
-			if (mtsClient) note += MTS_RetuningInSemitones(mtsClient, notes[c], c);
+			if (mtsClient) note += MTS_RetuningInSemitones(mtsClient, notes[c]);
 			outputs[CV_OUTPUT].setVoltage((note - 60.f) / 12.f, c);
 			outputs[GATE_OUTPUT].setVoltage(gates[c] ? 10.f : 0.f, c);
 			outputs[VELOCITY_OUTPUT].setVoltage(rescale(velocities[c], 0, 127, 0.f, 10.f), c);

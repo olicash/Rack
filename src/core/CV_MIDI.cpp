@@ -84,10 +84,10 @@ struct CV_MIDI : Module {
 			int note = (int) std::round(inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f);
 			if (mtsClient && MTS_HasMaster(mtsClient))
 			{
-				double delta = fabs(MTS_NoteToFrequency(mtsClient,0,c)-freq);
+				double delta = fabs(MTS_NoteToFrequency(mtsClient,0)-freq);
 				for (int i=1; i<128; i++)
 				{
-					double d = fabs(MTS_NoteToFrequency(mtsClient,i,c)-freq);
+					double d = fabs(MTS_NoteToFrequency(mtsClient,i)-freq);
 					if (d<delta) {delta = d; note = i;}
 				}
 			}
