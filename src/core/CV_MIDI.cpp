@@ -81,16 +81,9 @@ struct CV_MIDI : Module {
 
             
             double freq = 440. * pow(2., inputs[PITCH_INPUT].getVoltage(c) - 0.75);
-			int note = (int) std::round(inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f);
-			if (mtsClient && MTS_HasMaster(mtsClient))
-			{
-				double delta = fabs(MTS_NoteToFrequency(mtsClient,0)-freq);
-				for (int i=1; i<128; i++)
-				{
-					double d = fabs(MTS_NoteToFrequency(mtsClient,i)-freq);
-					if (d<delta) {delta = d; note = i;}
-				}
-			}
+            int note;
+            if (mtsClient && MTS_HasMaster(mtsClient)) note = MTS_FrequencyToNote(mtsClient, freq, c);
+            else note = (int) std::round(inputs[PITCH_INPUT].getVoltage(c) * 12.f + 60.f);
 			note = clamp(note, 0, 127);
 			bool gate = inputs[GATE_INPUT].getPolyVoltage(c) >= 1.f;
 			midiOutput.setNoteGate(note, gate, c);
